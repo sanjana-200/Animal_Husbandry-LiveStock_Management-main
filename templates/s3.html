@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Disease Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FAF3E0;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            background-color: #2C3E50;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        p {
+            line-height: 1.6;
+        }
+        form {
+            background: #fff;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #2980B9;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1F618D;
+        }
+        h3 {
+            color: #2980B9;
+        }
+        .error {
+            color: #E74C3C;
+        }
+        .language-selector {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        .back-button {
+            margin-bottom: 20px;
+        }
+        .back-button a {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="language-selector">
+        <label for="language">Language:</label>
+        <select id="language" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="kn">Kannada</option>
+            <option value="hi">Hindi</option>
+            <option value="te">Telugu</option>
+            <option value="ta">Tamil</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <div class="back-button">
+            <a href="/">← Back to Home</a>
+        </div>
+        
+        <h1 data-translate="Animal Disease Prediction">Animal Disease Prediction</h1>
+        <p data-translate="Upload an image of the animal to detect diseases and get preventive measures.">
+            Upload an image of the animal to detect diseases and get preventive measures.
+        </p>
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit" data-translate="Upload and Predict">Upload and Predict</button>
+        </form>
+
+        {% if img_data %}
+            <h3 data-translate="Uploaded Image:">Uploaded Image:</h3>
+            <img src="data:image/png;base64,{{ img_data }}" alt="Uploaded Image" style="width: 224px; height: 224px;">
+        {% endif %}
+
+        {% if prediction %}
+            <h3 data-translate="Prediction:">Prediction:</h3>
+            <p>{{ prediction }}</p>
+            <p data-translate="Confidence Score:">Confidence Score:</p>
+            <p>{{ confidence }}</p>
+
+            {% if medication %}
+                <h4 data-translate="Suggested Medication:">Suggested Medication:</h4>
+                <p>{{ medication }}</p>
+            {% else %}
+                <p data-translate="No medication suggestion available for this condition.">No medication suggestion available for this condition.</p>
+            {% endif %}
+        {% endif %}
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const savedLanguage = localStorage.getItem("selectedLanguage") || "en";
+            document.getElementById("language").value = savedLanguage;
+            translatePage(savedLanguage);
+        });
+
+        function changeLanguage() {
+            const selectedLanguage = document.getElementById("language").value;
+            localStorage.setItem("selectedLanguage", selectedLanguage);
+            translatePage(selectedLanguage);
+        }
+
+        function translatePage(targetLanguage) {
+            const elements = document.querySelectorAll("[data-translate]");
+
+            if (targetLanguage === "en") {
+                elements.forEach((el) => {
+                    el.innerText = el.getAttribute("data-translate");
+                });
+                return;
+            }
+
+            elements.forEach((el) => {
+                const originalText = el.getAttribute("data-translate");
+                fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLanguage}&dt=t&q=${encodeURIComponent(originalText)}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        el.innerText = data[0][0][0];
+                    })
+                    .catch((error) => console.error("Translation error:", error));
+            });
+        }
+    </script>
+</body>
+</html>
